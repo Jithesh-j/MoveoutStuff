@@ -132,6 +132,8 @@
 
   .thumbnail.active { border-color: #111; }
 
+  .main-image { cursor: zoom-in; }
+
   .details { padding: 18px; }
   .details h2 {
     margin: 0 0 7px;
@@ -173,6 +175,10 @@
     filter: grayscale(100%);
   }
 
+  .product-dialog .product.sold .dialog-image {
+    filter: grayscale(100%);
+  }
+
   .product.sold .sold-badge {
     display: flex;
   }
@@ -186,6 +192,63 @@
     background: #999;
     pointer-events: none;
   }
+
+  .product-dialog {
+    width: min(900px, calc(100% - 32px));
+    max-width: none;
+    max-height: calc(100% - 32px);
+    padding: 0;
+    border: 0;
+    border-radius: 16px;
+    overflow: auto;
+    box-shadow: 0 12px 40px rgba(0,0,0,.3);
+  }
+
+  .product-dialog .product {
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .product-dialog .product:hover { transform: none; }
+
+  .product-dialog::backdrop { background: rgba(0,0,0,.75); }
+
+  .dialog-close {
+    position: sticky;
+    top: 10px;
+    float: right;
+    z-index: 3;
+    width: 40px;
+    height: 40px;
+    margin: 10px 10px -50px 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0,0,0,.75);
+    color: white;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .dialog-gallery {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 240px;
+    background: #111;
+  }
+
+  .dialog-image {
+    display: block;
+    width: 100%;
+    height: min(70vh, 720px);
+    object-fit: contain;
+  }
+
+  .dialog-thumbnails { justify-content: center; }
+
+  .dialog-details { padding: 20px; }
 
   footer {
     text-align: center;
@@ -219,6 +282,11 @@
 
 </div>
 
+<dialog class="product-dialog" aria-label="Product details">
+  <button class="dialog-close" type="button" aria-label="Close product details">&times;</button>
+  <div class="dialog-card"></div>
+</dialog>
+
 <footer>
   Thank you for checking out my items!
 </footer>
@@ -248,42 +316,52 @@ You can also use image URLs.
 
 const products = [
   {
-    name: "Nike Shoes",
-    price: "$50",
+    name: "Bed",
+    price: "$20",
     sold: false,
-    description: "Good condition. Size 10.",
+    description: "Good condition. Single Person",
     images: [
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=900",
-      "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=900",
-      "https://images.unsplash.com/photo-1552346154-21d32810aba3?w=900"
+      "Bed.jpg"
     ]
   },
 
   {
-    name: "Jacket",
-    price: "$35",
+    name: "Table",
+    price: "$20",
     sold: false,
     description: "Lightly used and in great condition.",
     images: [
-      "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=900",
-      "https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=900",
-      "https://images.unsplash.com/photo-1520975958225-6f61f54c1a9b?w=900"
+      "table.jpg"
     ]
   },
 
   {
-    name: "Watch",
-    price: "$75",
-    sold: true,
-    description: "Classic watch. Works perfectly.",
+    name: "Furniture",
+    price: "$150",
+    sold: false,
+    description: "Good Condition.",
     images: [
-      "https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=900",
-      "https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?w=900"
+      "furniture-1.jpg", 
+      "furniture-2.jpg",
+      "furniture-3.jpg"
+    ]
+  },
+  {
+    name: "TV- Hisense with FireStick 4k",
+    price: "$150",
+    sold: false,
+    description: "Good Condition. 42'' ",
+    images: [
+      "TV-1.jpg",
+      "FireStick.jpg"
     ]
   }
 ];
 
 const productsContainer = document.getElementById("products");
+const productDialog = document.querySelector(".product-dialog");
+const dialogCard = productDialog.querySelector(".dialog-card");
+let dialogImageIndex = 0;
 
 function createProduct(product, productIndex) {
   const card = document.createElement("div");
@@ -315,6 +393,10 @@ function createProduct(product, productIndex) {
   const mainImage = card.querySelector(".main-image");
   const counter = card.querySelector(".counter");
   const thumbnails = card.querySelector(".thumbnails");
+
+  mainImage.addEventListener("click", () => {
+    openProduct(product, currentImage);
+  });
 
   product.images.forEach((image, index) => {
     const thumbnail = document.createElement("img");
@@ -350,6 +432,68 @@ function createProduct(product, productIndex) {
 
   productsContainer.appendChild(card);
 }
+
+function openProduct(product, imageIndex) {
+  dialogImageIndex = imageIndex;
+  dialogCard.className = "dialog-card product" + (product.sold ? " sold" : "");
+  dialogCard.innerHTML = `
+    <div class="dialog-gallery">
+      <img class="dialog-image" src="${product.images[dialogImageIndex]}" alt="${product.name}">
+      <button class="arrow prev" type="button" aria-label="Previous picture">&#10094;</button>
+      <button class="arrow next" type="button" aria-label="Next picture">&#10095;</button>
+      <div class="counter">${dialogImageIndex + 1} / ${product.images.length}</div>
+      <div class="sold-badge">SOLD OUT</div>
+    </div>
+    <div class="thumbnails dialog-thumbnails"></div>
+    <div class="details dialog-details">
+      <h2>${product.name}</h2>
+      <p class="description">${product.description || ""}</p>
+      <div class="price">${product.price}</div>
+      <a class="contact" href="tel:+16694558625">Call Me</a>
+    </div>
+  `;
+
+  const image = dialogCard.querySelector(".dialog-image");
+  const counter = dialogCard.querySelector(".counter");
+  const thumbnails = dialogCard.querySelector(".dialog-thumbnails");
+
+  function showDialogImage(index) {
+    dialogImageIndex = (index + product.images.length) % product.images.length;
+    image.src = product.images[dialogImageIndex];
+    image.alt = `${product.name} picture ${dialogImageIndex + 1}`;
+    counter.textContent = `${dialogImageIndex + 1} / ${product.images.length}`;
+    thumbnails.querySelectorAll(".thumbnail").forEach((thumbnail, i) => {
+      thumbnail.classList.toggle("active", i === dialogImageIndex);
+    });
+  }
+
+  product.images.forEach((src, index) => {
+    const thumbnail = document.createElement("img");
+    thumbnail.src = src;
+    thumbnail.alt = `${product.name} picture ${index + 1}`;
+    thumbnail.className = "thumbnail" + (index === dialogImageIndex ? " active" : "");
+    thumbnail.addEventListener("click", () => showDialogImage(index));
+    thumbnails.appendChild(thumbnail);
+  });
+
+  dialogCard.querySelector(".prev").addEventListener("click", () => {
+    showDialogImage(dialogImageIndex - 1);
+  });
+  dialogCard.querySelector(".next").addEventListener("click", () => {
+    showDialogImage(dialogImageIndex + 1);
+  });
+  productDialog.showModal();
+}
+
+productDialog.querySelector(".dialog-close").addEventListener("click", () => {
+  productDialog.close();
+});
+
+productDialog.addEventListener("click", event => {
+  if (event.target === productDialog) {
+    productDialog.close();
+  }
+});
 
 products.forEach(createProduct);
 </script>
