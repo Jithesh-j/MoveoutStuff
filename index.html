@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Items for Sale</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f5f5f5;
+    color: #222;
+  }
+
+  header {
+    background: #111;
+    color: white;
+    text-align: center;
+    padding: 35px 20px;
+  }
+
+  header h1 { margin: 0 0 8px; font-size: 32px; }
+  header p { margin: 0; color: #ccc; }
+
+  .container {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 18px;
+  }
+
+  .instructions {
+    background: white;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 25px;
+    border: 1px solid #ddd;
+  }
+
+  .instructions strong { color: #111; }
+
+  .products {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    gap: 24px;
+  }
+
+  .product {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,.08);
+    transition: transform .2s, opacity .2s;
+  }
+
+  .product:hover { transform: translateY(-3px); }
+
+  .gallery {
+    position: relative;
+    background: #eee;
+  }
+
+  .main-image {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0,0,0,.65);
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+    z-index: 2;
+  }
+
+  .arrow:hover { background: rgba(0,0,0,.85); }
+  .prev { left: 10px; }
+  .next { right: 10px; }
+
+  .counter {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    background: rgba(0,0,0,.65);
+    color: white;
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: 12px;
+  }
+
+  .sold-badge {
+    display: none;
+    position: absolute;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,.45);
+    color: #b00020;
+    font-size: 30px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    transform: rotate(-12deg);
+    text-shadow: 0 1px 2px white;
+  }
+
+  .thumbnails {
+    display: flex;
+    gap: 7px;
+    padding: 9px;
+    overflow-x: auto;
+    background: #fafafa;
+  }
+
+  .thumbnail {
+    width: 58px;
+    height: 58px;
+    flex: 0 0 58px;
+    object-fit: cover;
+    border: 2px solid transparent;
+    border-radius: 7px;
+    cursor: pointer;
+  }
+
+  .thumbnail.active { border-color: #111; }
+
+  .details { padding: 18px; }
+  .details h2 {
+    margin: 0 0 7px;
+    font-size: 21px;
+  }
+
+  .description {
+    color: #666;
+    line-height: 1.45;
+    margin: 0 0 12px;
+  }
+
+  .price {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 15px;
+  }
+
+  .contact {
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    text-decoration: none;
+    background: #111;
+    color: white;
+    padding: 12px;
+    border-radius: 9px;
+    font-weight: bold;
+  }
+
+  .contact:hover { background: #333; }
+
+  /* Sold-out appearance */
+  .product.sold {
+    opacity: .68;
+  }
+
+  .product.sold .main-image {
+    filter: grayscale(100%);
+  }
+
+  .product.sold .sold-badge {
+    display: flex;
+  }
+
+  .product.sold .details h2,
+  .product.sold .price {
+    text-decoration: line-through;
+  }
+
+  .product.sold .contact {
+    background: #999;
+    pointer-events: none;
+  }
+
+  footer {
+    text-align: center;
+    color: #777;
+    padding: 40px 20px;
+  }
+
+  @media (max-width: 600px) {
+    header h1 { font-size: 26px; }
+    .main-image { height: 260px; }
+    .products { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Items for Sale</h1>
+  <p>Browse the available items below</p>
+</header>
+
+<div class="container">
+
+  <div class="instructions">
+    <strong>Interested in something?</strong>
+    Contact me using the button on the item.
+  </div>
+
+  <div id="products" class="products"></div>
+
+</div>
+
+<footer>
+  Thank you for checking out my items!
+</footer>
+
+<script>
+/*
+=========================================================
+EDIT YOUR PRODUCTS HERE
+=========================================================
+
+For every product:
+- name     = product name
+- price    = price you want to display
+- sold     = false if available, true if sold
+- images   = add as many pictures as you want
+- description = optional description
+
+IMPORTANT:
+If your images are in the same folder as this HTML file,
+use names such as:
+    "shoes1.jpg"
+    "shoes2.jpg"
+
+You can also use image URLs.
+=========================================================
+*/
+
+const products = [
+  {
+    name: "Nike Shoes",
+    price: "$50",
+    sold: false,
+    description: "Good condition. Size 10.",
+    images: [
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=900",
+      "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=900",
+      "https://images.unsplash.com/photo-1552346154-21d32810aba3?w=900"
+    ]
+  },
+
+  {
+    name: "Jacket",
+    price: "$35",
+    sold: false,
+    description: "Lightly used and in great condition.",
+    images: [
+      "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=900",
+      "https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=900",
+      "https://images.unsplash.com/photo-1520975958225-6f61f54c1a9b?w=900"
+    ]
+  },
+
+  {
+    name: "Watch",
+    price: "$75",
+    sold: true,
+    description: "Classic watch. Works perfectly.",
+    images: [
+      "https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=900",
+      "https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?w=900"
+    ]
+  }
+];
+
+const productsContainer = document.getElementById("products");
+
+function createProduct(product, productIndex) {
+  const card = document.createElement("div");
+  card.className = "product" + (product.sold ? " sold" : "");
+
+  let currentImage = 0;
+
+  card.innerHTML = `
+    <div class="gallery">
+      <img class="main-image" src="${product.images[0]}" alt="${product.name}">
+      <button class="arrow prev" aria-label="Previous picture">&#10094;</button>
+      <button class="arrow next" aria-label="Next picture">&#10095;</button>
+      <div class="counter">1 / ${product.images.length}</div>
+      <div class="sold-badge">SOLD OUT</div>
+    </div>
+
+    <div class="thumbnails"></div>
+
+    <div class="details">
+      <h2>${product.name}</h2>
+      <p class="description">${product.description || ""}</p>
+      <div class="price">${product.price}</div>
+      <a class="contact" href="mailto:YOUR-EMAIL@example.com?subject=Interested in ${encodeURIComponent(product.name)}">
+        Contact Me
+      </a>
+    </div>
+  `;
+
+  const mainImage = card.querySelector(".main-image");
+  const counter = card.querySelector(".counter");
+  const thumbnails = card.querySelector(".thumbnails");
+
+  product.images.forEach((image, index) => {
+    const thumbnail = document.createElement("img");
+    thumbnail.src = image;
+    thumbnail.alt = `${product.name} picture ${index + 1}`;
+    thumbnail.className = "thumbnail" + (index === 0 ? " active" : "");
+
+    thumbnail.addEventListener("click", () => {
+      showImage(index);
+    });
+
+    thumbnails.appendChild(thumbnail);
+  });
+
+  function showImage(index) {
+    currentImage = (index + product.images.length) % product.images.length;
+    mainImage.src = product.images[currentImage];
+    mainImage.alt = `${product.name} picture ${currentImage + 1}`;
+    counter.textContent = `${currentImage + 1} / ${product.images.length}`;
+
+    card.querySelectorAll(".thumbnail").forEach((thumb, i) => {
+      thumb.classList.toggle("active", i === currentImage);
+    });
+  }
+
+  card.querySelector(".prev").addEventListener("click", () => {
+    showImage(currentImage - 1);
+  });
+
+  card.querySelector(".next").addEventListener("click", () => {
+    showImage(currentImage + 1);
+  });
+
+  productsContainer.appendChild(card);
+}
+
+products.forEach(createProduct);
+</script>
+
+</body>
+</html>
